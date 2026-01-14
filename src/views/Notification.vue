@@ -114,6 +114,14 @@ const apiStore = useApiStore()
 
 const showToast = ref(false)
 const toastMessage = ref('')
+const sending = ref(false)
+
+const notification = ref({
+  topic: 'all',
+  title: '',
+  body: '',
+  imageUrl: ''
+})
 
 const canSend = computed(() => {
   return notification.value.title.trim() && notification.value.body.trim()
@@ -148,8 +156,16 @@ const handleImageSelect = async (event) => {
 
 const sendNotification = async () => {
   if (!canSend.value) {
+    console.log('Cannot send: title or body is empty')
     return
   }
+
+  console.log('Sending notification...', {
+    topic: notification.value.topic,
+    title: notification.value.title,
+    body: notification.value.body,
+    image_url: notification.value.imageUrl
+  })
 
   sending.value = true
   try {
@@ -159,6 +175,8 @@ const sendNotification = async () => {
       body: notification.value.body,
       image_url: notification.value.imageUrl
     })
+
+    console.log('Response:', response.data)
 
     if (response.data.success) {
       showSuccessToast('Notification sent successfully! 🎉')
@@ -177,7 +195,8 @@ const sendNotification = async () => {
     }
   } catch (error) {
     console.error('Failed to send notification:', error)
-    apiStore.showError('Failed to send notification')
+    console.error('Error details:', error.response?.data)
+    showSuccessToast(`Error: ${error.response?.data?.error || error.message}`)
   } finally {
     sending.value = false
   }
