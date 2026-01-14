@@ -1,6 +1,14 @@
 <template>
   <div class="appconfig-page">
     <h2 class="page-title">App Configuration</h2>
+
+    <!-- Success Toast -->
+    <transition name="toast">
+      <div v-if="showToast" class="toast-notification">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>{{ toastMessage }}</span>
+      </div>
+    </transition>
     
     <div v-if="loading" class="loading">
       <div class="loading-spinner"></div>
@@ -337,9 +345,26 @@ import axios from 'axios'
 const apiStore = useApiStore()
 
 const CONFIG_BASE_URL = 'http://localhost:8585'
+const IMAGE_BASE_URL = 'http://localhost:4545'
 
 const loading = ref(true)
 const activeTab = ref('version')
+const showToast = ref(false)
+const toastMessage = ref('')
+
+const showSuccessToast = (message) => {
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 3000)
+}
+
+const getFullImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  return `${IMAGE_BASE_URL}${url}`
+}
 
 const tabs = [
   { id: 'version', label: 'App Version', icon: 'smartphone' },
@@ -472,10 +497,10 @@ const saveConfig = async () => {
     const response = await axios.post(`${CONFIG_BASE_URL}/api/2dexpect/config`, payload)
     console.log('Save response:', response.data)
     
-    apiStore.showSuccess('Configuration saved successfully!')
+    showSuccessToast('Configuration saved successfully! ✅')
   } catch (error) {
     console.error('Failed to save config:', error)
-    apiStore.showError('Failed to save configuration')
+    showSuccessToast('Failed to save configuration ❌')
   }
 }
 
@@ -514,10 +539,10 @@ const handleMessageImageSelect = async (event, index) => {
 
   try {
     const imageUrl = await apiStore.uploadImage(file)
-    config.value.messages[index].imageUrl = imageUrl
+    config.value.messages[index].imageUrl = getFullImageUrl(imageUrl)
+    console.log('Image uploaded:', config.value.messages[index].imageUrl)
   } catch (error) {
     console.error('Image upload failed:', error)
-    apiStore.showError('Failed to upload image')
   }
 }
 
@@ -1124,6 +1149,56 @@ onMounted(() => {
   background: linear-gradient(135deg, #e53935 0%, #d32f2f 100%);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(244, 67, 54, 0.4);
+}
+
+/* Success Toast */
+.toast-notification {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+  color: white;
+  padding: 16px 28px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  z-index: 10000;
+  animation: slideDown 0.3s ease;
+}
+
+.toast-notification .material-symbols-outlined {
+  font-size: 24px;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translate(-50%, -20px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from {
+  transform: translate(-50%, -20px);
+  opacity: 0;
+}
+
+.toast-leave-to {
+  transform: translate(-50%, -20px);
+  opacity: 0;
 }
 
 /* Responsive Adjustments */
