@@ -13,12 +13,14 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:4545',
+        target: 'https://api.atth.online',
         changeOrigin: true,
+        secure: true,
       },
       '/uploads': {
-        target: 'http://localhost:4545',
+        target: 'https://api.atth.online',
         changeOrigin: true,
+        secure: true,
       },
     },
   },

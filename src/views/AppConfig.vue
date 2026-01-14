@@ -349,8 +349,8 @@ import axios from 'axios'
 
 const apiStore = useApiStore()
 
-const CONFIG_BASE_URL = 'http://localhost:8585'
-const IMAGE_BASE_URL = 'http://localhost:4545'
+const CONFIG_BASE_URL = 'https://config.atth.online'
+const IMAGE_BASE_URL = 'https://api.atth.online'
 
 const loading = ref(true)
 const saving = ref(false)

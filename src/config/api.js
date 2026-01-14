@@ -7,7 +7,7 @@
 
 export const API_CONFIG = {
   // Base URLs
-  BASE_URL: 'http://localhost:4545',
+  BASE_URL: 'https://api.atth.online',
   
   // App Identity
   APP_NAME: '2D Expect',
