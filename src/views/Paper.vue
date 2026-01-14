@@ -2,6 +2,14 @@
   <div class="paper-page">
     <h2 class="mb-2">Paper/Guides</h2>
 
+    <!-- Success Toast -->
+    <transition name="toast">
+      <div v-if="showToast" class="toast-notification">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>{{ toastMessage }}</span>
+      </div>
+    </transition>
+
     <div v-if="loading" class="text-center p-3">
       <div class="spinner"></div>
     </div>
@@ -28,8 +36,9 @@
               style="flex: 1"
             />
             <button type="submit" class="btn btn-primary" :disabled="creating">
-              <span v-if="creating" class="spinner"></span>
-              <span v-else>Add</span>
+              <span v-if="!creating" class="material-symbols-outlined">add</span>
+              <span v-else class="material-symbols-outlined rotating">sync</span>
+              {{ creating ? 'Adding...' : 'Add' }}
             </button>
           </form>
         </div>
@@ -176,6 +185,16 @@ const uploadProgress = ref({})
 const uploadingTypes = ref(new Set())
 const showDeleteConfirm = ref(false)
 const deleteConfirmData = ref(null)
+const showToast = ref(false)
+const toastMessage = ref('')
+
+const showSuccessToast = (message) => {
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 3000)
+}
 
 const newType = reactive({
   name: '',
@@ -199,8 +218,9 @@ async function createType() {
     await apiStore.createPaperType(newType)
     newType.name = ''
     await loadTypes()
+    showSuccessToast('Type created successfully! ✅')
   } catch (err) {
-    alert('Failed to create type: ' + err.message)
+    showSuccessToast('Failed to create type ❌')
   } finally {
     creating.value = false
   }
@@ -212,8 +232,9 @@ async function deleteTypeConfirm(type) {
   try {
     await apiStore.deletePaperType(type.id)
     types.value = types.value.filter(t => t.id !== type.id)
+    showSuccessToast('Type deleted successfully! ✅')
   } catch (err) {
-    alert('Failed to delete type: ' + err.message)
+    showSuccessToast('Failed to delete type ❌')
   }
 }
 
@@ -288,6 +309,7 @@ async function handleImagesSelect(event, type) {
         await loadTypes()
         
         // Success message
+        showSuccessToast(`Successfully uploaded ${imageUrls.length} images! 🎉`)
         console.log(`Successfully uploaded ${imageUrls.length} images`)
       } catch (batchError) {
         console.error('Batch create error:', batchError)
@@ -295,7 +317,7 @@ async function handleImagesSelect(event, type) {
         throw new Error(batchError.response?.data?.error || batchError.message)
       }
     } else {
-      alert('No images were uploaded successfully')
+      showSuccessToast('No images were uploaded successfully ❌')
     }
     
     // Clear progress after a delay to show completion
@@ -305,7 +327,7 @@ async function handleImagesSelect(event, type) {
     
   } catch (err) {
     console.error('Failed to save images:', err)
-    alert('Failed to save images: ' + err.message)
+    showSuccessToast('Failed to save images ❌')
   } finally {
     uploadingTypes.value.delete(type.id)
     event.target.value = ''
@@ -318,8 +340,9 @@ async function deleteImageConfirm(image) {
   try {
     await apiStore.deletePaperImage(image.id)
     await loadTypes()
+    showSuccessToast('Image deleted successfully! ✅')
   } catch (err) {
-    alert('Failed to delete image: ' + err.message)
+    showSuccessToast('Failed to delete image ❌')
   }
 }
 
@@ -357,10 +380,10 @@ async function confirmDelete() {
     
     console.log(`✅ Successfully deleted ${deleted} out of ${images.length} images`)
     await loadTypes()
-    alert(`✅ Deleted ${deleted} images successfully!`)
+    showSuccessToast(`Deleted ${deleted} images successfully! ✅`)
   } catch (err) {
     console.error('Clear all images error:', err)
-    alert('❌ Failed to clear images: ' + err.message)
+    showSuccessToast('Failed to clear images ❌')
   } finally {
     loading.value = false
   }
@@ -816,5 +839,69 @@ loadTypes()
   border-radius: 10px;
   min-width: 20px;
   text-align: center;
+}
+
+/* Success Toast */
+.toast-notification {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+  color: white;
+  padding: 16px 28px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  z-index: 10000;
+  animation: slideDown 0.3s ease;
+}
+
+.toast-notification .material-symbols-outlined {
+  font-size: 24px;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translate(-50%, -20px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from {
+  transform: translate(-50%, -20px);
+  opacity: 0;
+}
+
+.toast-leave-to {
+  transform: translate(-50%, -20px);
+  opacity: 0;
+}
+
+/* Rotating Icon Animation */
+.rotating {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

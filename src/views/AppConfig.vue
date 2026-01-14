@@ -316,9 +316,14 @@
 
         <!-- Save Button -->
         <div class="save-section">
-          <button @click="saveConfig" class="btn btn-primary btn-save">
-            <span class="material-symbols-outlined">save</span>
-            Save Configuration
+          <button 
+            @click="saveConfig" 
+            class="btn btn-primary btn-save"
+            :disabled="saving"
+          >
+            <span v-if="!saving" class="material-symbols-outlined">save</span>
+            <span v-else class="material-symbols-outlined rotating">sync</span>
+            {{ saving ? 'Saving...' : 'Save Configuration' }}
           </button>
         </div>
       </div>
@@ -348,6 +353,7 @@ const CONFIG_BASE_URL = 'http://localhost:8585'
 const IMAGE_BASE_URL = 'http://localhost:4545'
 
 const loading = ref(true)
+const saving = ref(false)
 const activeTab = ref('version')
 const showToast = ref(false)
 const toastMessage = ref('')
@@ -457,6 +463,7 @@ const loadConfig = async () => {
 }
 
 const saveConfig = async () => {
+  saving.value = true
   try {
     // Convert camelCase to snake_case for API
     const payload = {
@@ -501,6 +508,8 @@ const saveConfig = async () => {
   } catch (error) {
     console.error('Failed to save config:', error)
     showSuccessToast('Failed to save configuration ❌')
+  } finally {
+    saving.value = false
   }
 }
 
@@ -1199,6 +1208,20 @@ onMounted(() => {
 .toast-leave-to {
   transform: translate(-50%, -20px);
   opacity: 0;
+}
+
+/* Rotating Icon Animation */
+.rotating {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive Adjustments */
